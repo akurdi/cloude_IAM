@@ -24,6 +24,9 @@ public class UserProfile {
         this.role = role;
     }
 
+    public UserProfile() {
+    }
+
     public String getExternalId() {
         return externalId;
     }

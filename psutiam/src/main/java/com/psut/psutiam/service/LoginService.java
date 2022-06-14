@@ -10,4 +10,6 @@ public interface LoginService {
 
     UserProfile findUserProfileByEmailAndPassword(String email, String password) throws NoSuchAlgorithmException, InvalidKeySpecException, IamException;
     void changePassword(String username, String oldPassword, String newPassword);
+
+    boolean isNew(String email) throws IamException;
 }

@@ -7,43 +7,23 @@ import java.util.Date;
 import java.util.Objects;
 import java.util.UUID;
 
-@Entity(name = "login_table")
-//@PrimaryKeyJoinColumn(name = "id")
-public class Login {
-
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    @Column(name = "id")
-    private long id;
-
-
-    private String uuid = UUID.randomUUID().toString();
-
-    private Date createdDate = new Date();
-
-
-    public long getId() {
-        return id;
-    }
-
-    public void setId(long id) {
-        this.id = id;
-    }
-
-    public Date getCreatedDate() {
-        return createdDate;
-    }
-
-    public void setCreatedDate(Date createdDate) {
-        this.createdDate = createdDate;
-    }
+@Entity(name = "my_login")
+@Table(
+        name = "my_login",
+        indexes = {
+                @Index(name = "my_login_email", columnList = "username"),
+        })
+@PrimaryKeyJoinColumn(name = "id")
+public class Login extends Identity {
 
     @Column(name = "username", unique = true, nullable = false)
     private String username;
 
     @Column(nullable = false)
     private String password;
+
+    @Column(nullable = false)
+    private boolean firstTime = true;
 
 
     public String getPassword() {
@@ -62,25 +42,25 @@ public class Login {
         this.username = username;
     }
 
-//    @GeneratedValue
-    public String getUuid() {
-        return uuid;
-    }
-
-    public void setUuid(String uuid) {
-        this.uuid = uuid;
-    }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Login identity = (Login) o;
-        return id == identity.id;
+        return getId() == identity.getId();
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id);
+        return Objects.hash(getId());
+    }
+
+
+    public boolean isFirstTime() {
+        return firstTime;
+    }
+
+    public void setFirstTime(boolean firstTime) {
+        this.firstTime = firstTime;
     }
 }

@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.util.Collection;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -24,13 +25,16 @@ public class UserServiceImpl implements UserService {
     private UserRepo userRepo;
     private LoginRepo loginRepo;
 
+    private IdentityRelRepo identityRelRepo;
+
     private PasswordServiceImpl passwordService;
 //    private IdentityRelRepo identityRelRepo;
 
     @Autowired
-    public UserServiceImpl(UserRepo userRepo, LoginRepo loginRepo, PasswordServiceImpl passwordService) {
+    public UserServiceImpl(UserRepo userRepo, LoginRepo loginRepo, IdentityRelRepo identityRelRepo, PasswordServiceImpl passwordService) {
         this.userRepo = userRepo;
         this.loginRepo = loginRepo;
+        this.identityRelRepo = identityRelRepo;
         this.passwordService = passwordService;
     }
 
@@ -54,6 +58,30 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    public UserProfile updateUserProfile(UserProfile userProfile) throws IamException {
+        User user = userRepo.findUserByEmail(userProfile.getEmail()).orElseThrow(() -> new IamException("user not found"));
+        user.setEmail(userProfile.getEmail());
+        user.setFirstName(userProfile.getFirstName());
+        user.setLastName(userProfile.getLastName());
+        user.setRole(userProfile.getRole());
+        user = userRepo.save(user);
+        return getUserProfile(user);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public boolean deleteUserProfile(String uuid) throws IamException {
+        User user = userRepo.findUserByUuid(uuid).orElseThrow(() -> new IamException("user not found"));
+        IdentityRel identityRel = identityRelRepo.findIdentityRelByIdentity1AndRelType(user, RelType.accessBy);
+        identityRelRepo.delete(identityRel);
+        Optional<Login> loginByUsername = loginRepo.findLoginByUsername(user.getEmail());
+        loginRepo.delete(loginByUsername.get());
+        userRepo.delete(user);
+        return true;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
     public UserProfile saveUserProfile(UserProfile userProfile) throws NoSuchAlgorithmException, InvalidKeySpecException {
         User user = new User();
         user.setEmail(userProfile.getEmail());
@@ -67,11 +95,11 @@ public class UserServiceImpl implements UserService {
         login.setPassword(passwordService.getSaltedHashPassword("1234")); //todo chage it
         login = loginRepo.save(login);
 
-//        IdentityRel identityRel = new IdentityRel();
-//        identityRel.setUser(user);
-//        identityRel.setLogin(login);
-//        identityRel.setRelType(RelType.accessBy);
-//        identityRelRepo.save(identityRel);
+        IdentityRel identityRel = new IdentityRel();
+        identityRel.setIdentity1(user);
+        identityRel.setIdentity2(login);
+        identityRel.setRelType(RelType.accessBy);
+        identityRelRepo.save(identityRel);
         return getUserProfile(user);
     }
 
@@ -80,6 +108,5 @@ public class UserServiceImpl implements UserService {
         if (role.equals(Role.Admin)) throw new IamException("You can not get all Admin");
         Iterable<User> usersByRole = userRepo.findUsersByRole(role);
         return StreamSupport.stream(usersByRole.spliterator(), false).map(user -> getUserProfile(user)).collect(Collectors.toList());
-
     }
 }

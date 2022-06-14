@@ -13,7 +13,10 @@ import org.springframework.web.bind.annotation.*;
 
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
+import java.util.stream.Collectors;
 //import io.swagger.annotations.Api;
 
 
@@ -46,13 +49,26 @@ public class UserProfileController {
         return new ResponseEntity<>(profile, HttpStatus.OK);
     }
 
-
     @PostMapping(consumes = {MediaType.APPLICATION_JSON_VALUE},
             produces = {MediaType.APPLICATION_JSON_VALUE})
     //Valid
     public ResponseEntity<UserProfile> save( /**@Valid**/@RequestBody UserProfile userProfileRequest) throws NoSuchAlgorithmException, InvalidKeySpecException {
         UserProfile userProfile = userService.saveUserProfile(userProfileRequest);
         return new ResponseEntity<>(userProfile, HttpStatus.CREATED);
+    }
+
+    @PutMapping(consumes = {MediaType.APPLICATION_JSON_VALUE},
+            produces = {MediaType.APPLICATION_JSON_VALUE})
+    //Valid
+    public ResponseEntity<UserProfile> update( /**@Valid**/@RequestBody UserProfile userProfileRequest) throws NoSuchAlgorithmException, InvalidKeySpecException, IamException {
+        UserProfile userProfile = userService.updateUserProfile(userProfileRequest);
+        return new ResponseEntity<>(userProfile, HttpStatus.CREATED);
+    }
+
+    @DeleteMapping("uuid/{uuid}")
+    public ResponseEntity<Boolean> delete(@PathVariable String uuid) throws IamException {
+        userService.deleteUserProfile(uuid);
+        return new ResponseEntity<>(Boolean.TRUE, HttpStatus.CREATED);
     }
 
 
@@ -67,5 +83,10 @@ public class UserProfileController {
         }
     }
 
-
+    @GetMapping(path = "getByRoles")
+    public ResponseEntity<List<String>> getAllByRole() throws RuntimeException, IamException {
+        return new ResponseEntity<>(Arrays.asList(Role.values()).stream()
+                .map(role -> role.getLevel()).collect(Collectors.toList()),
+                HttpStatus.OK);
+    }
 }

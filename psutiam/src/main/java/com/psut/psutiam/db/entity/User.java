@@ -7,34 +7,14 @@ import java.util.Date;
 import java.util.Objects;
 import java.util.UUID;
 
-@Entity(name = "my_user_table")
-//@PrimaryKeyJoinColumn(name = "id")
-public class User {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    @Column(name = "id")
-    private long id;
-
-    private String uuid  = UUID.randomUUID().toString();
-
-    private Date createdDate = new Date();
-
-    public long getId() {
-        return id;
-    }
-
-    public void setId(long id) {
-        this.id = id;
-    }
-
-    public Date getCreatedDate() {
-        return createdDate;
-    }
-
-    public void setCreatedDate(Date createdDate) {
-        this.createdDate = createdDate;
-    }
+@Entity(name = "my_user")
+@Table(
+        name = "my_user",
+        indexes = {
+                @Index(name = "my_user_email", columnList = "email"),
+        })
+@PrimaryKeyJoinColumn(name = "id")
+public class User extends Identity {
 
     @Column(name = "email", unique = true)
     private String email;
@@ -77,25 +57,16 @@ public class User {
         this.role = role;
     }
 
-//    @GeneratedValue(strategy = GenerationType.TABLE, generator = "inventory")
-    public String getUuid() {
-        return uuid;
-    }
-
-    public void setUuid(String uuid) {
-        this.uuid = uuid;
-    }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         User identity = (User) o;
-        return id == identity.id;
+        return getId() == identity.getId();
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id);
+        return Objects.hash(getId());
     }
 }
